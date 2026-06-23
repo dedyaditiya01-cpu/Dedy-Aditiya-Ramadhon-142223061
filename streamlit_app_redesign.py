@@ -1,6 +1,166 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+
+# TEMPEL DATA = [...] MILIKMU DI SINI
+# Jangan ubah bagian data
+
+st.set_page_config(
+    page_title="Analisis Perilaku dan Etos Kerja",
+    page_icon="📊",
+    layout="wide"
+)
+
+st.markdown("""
+<style>
+.main {
+    background-color:#0f172a;
+}
+.hero {
+    text-align:center;
+    padding:40px;
+}
+.hero h1 {
+    color:white;
+}
+.hero p {
+    color:#cbd5e1;
+}
+</style>
+""", unsafe_allow_html=True)
+
+df = pd.DataFrame(data)
+
+# Bersihkan baris ringkasan yang ikut masuk data
+if "Timestamp" in df.columns:
+    df = df[
+        ~df["Timestamp"].astype(str).isin(
+            ["Jenis kelamin","Usia","Status Anda saat ini","TOTAL"]
+        )
+    ]
+
+menu = st.sidebar.radio(
+    "📌 Menu",
+    [
+        "Dashboard",
+        "Analisis Perilaku",
+        "Analisis Etos Kerja",
+        "Data Responden"
+    ]
+)
+
+if menu == "Dashboard":
+
+    st.markdown("""
+    <div class='hero'>
+        <h1>📊 Analisis Perilaku dan Etos Kerja</h1>
+        <p>Dashboard Interaktif Hasil Survei Responden</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c1,c2,c3,c4 = st.columns(4)
+
+    total = len(df)
+
+    mahasiswa = len(df[df["Status Anda saat ini"]=="Mahasiswa"])
+    pekerja = len(df[df["Status Anda saat ini"]=="Pekerja"])
+    keduanya = len(df[df["Status Anda saat ini"]=="Keduanya"])
+
+    c1.metric("Total", total)
+    c2.metric("Mahasiswa", mahasiswa)
+    c3.metric("Pekerja", pekerja)
+    c4.metric("Keduanya", keduanya)
+
+    st.divider()
+
+    col1,col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Distribusi Jenis Kelamin")
+        gender = df["  Jenis kelamin  "].value_counts()
+        st.bar_chart(gender)
+
+    with col2:
+        st.subheader("Status Responden")
+        status = df["Status Anda saat ini"].value_counts()
+        st.bar_chart(status)
+
+    st.success("""
+    Mayoritas responden cenderung tetap tenang ketika menghadapi masalah
+    dan lebih memilih mencari solusi saat rencana gagal.
+    """)
+
+elif menu == "Analisis Perilaku":
+
+    st.title("🧠 Analisis Perilaku")
+
+    pilihan = st.selectbox(
+        "Pilih Variabel",
+        [
+            "Saat menghadapi masalah  ",
+            "Jika ada orang melakukan kesalahan  ",
+            "Ketika rencana gagal  "
+        ]
+    )
+
+    hasil = df[pilihan].value_counts()
+
+    chart_data = hasil.reset_index()
+    chart_data.columns = ["Kategori","Jumlah"]
+
+    st.bar_chart(
+        chart_data.set_index("Kategori")
+    )
+
+elif menu == "Analisis Etos Kerja":
+
+    st.title("💼 Analisis Etos Kerja")
+
+    pilihan = st.selectbox(
+        "Pilih Variabel",
+        [
+            "Ketika ada tugas",
+            "Waktu luang  ",
+            "Mendekati deadline  ",
+            "Saat menghadapi kesulitan  ",
+            "Beban kerja/tugas banyak  "
+        ]
+    )
+
+    hasil = df[pilihan].value_counts()
+
+    chart_data = hasil.reset_index()
+    chart_data.columns = ["Kategori","Jumlah"]
+
+    st.bar_chart(
+        chart_data.set_index("Kategori")
+    )
+
+else:
+
+    st.title("📋 Data Responden")
+
+    cari = st.text_input("Cari Data")
+
+    if cari:
+
+        mask = df.astype(str).apply(
+            lambda x: x.str.contains(
+                cari,
+                case=False,
+                na=False
+            )
+        ).any(axis=1)
+
+        st.dataframe(
+            df[mask],
+            use_container_width=True
+        )
+
+    else:
+        st.dataframe(
+            df,
+            use_container_width=True
+        )
 
 data = [
   {
