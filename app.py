@@ -42,12 +42,7 @@ html, body, [class*="css"], .stApp { font-family: 'Inter', sans-serif !important
 
 hr { border-color: rgba(255,255,255,0.07) !important; margin: 2rem 0 !important; }
 
-#MainMenu, footer, header { visibility: hidden !important; }
-.stDeployButton { display: none !important; }
-[data-testid="stToolbar"] { display: none !important; }
-[data-testid="stHeader"] { display: none !important; background: transparent !important; }
-[data-testid="stDecoration"] { display: none !important; }
-.stAppHeader { display: none !important; }
+#MainMenu, footer { visibility: hidden !important; }
 .stDeployButton { display: none !important; }
 
 /* Tombol nav custom */
