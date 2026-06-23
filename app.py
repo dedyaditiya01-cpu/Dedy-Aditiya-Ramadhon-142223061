@@ -340,27 +340,83 @@ elif page == "👥  Responden":
     st.markdown(f"<h2 style='color:#fff;font-weight:800;letter-spacing:-.02em;margin-bottom:.3rem'>Daftar Responden</h2>", unsafe_allow_html=True)
     st.markdown(f"<div style='font-size:.88rem;color:#5c5880;margin-bottom:1.5rem'><span style='color:#c4b5fd;font-weight:700'>{T}</span> responden berpartisipasi dalam survei ini.</div>", unsafe_allow_html=True)
 
-    c1,c2 = st.columns(2)
-    with c1:
-        f_status = st.multiselect("Filter Status", df["Status Anda saat ini"].unique().tolist(), default=df["Status Anda saat ini"].unique().tolist())
-    with c2:
-        f_gender = st.multiselect("Filter Jenis Kelamin", df["Jenis kelamin"].unique().tolist(), default=df["Jenis kelamin"].unique().tolist())
+    all_status = sorted(df["Status Anda saat ini"].dropna().unique().tolist())
+    all_gender = sorted(df["Jenis kelamin"].dropna().unique().tolist())
 
-    dv = df[df["Status Anda saat ini"].isin(f_status) & df["Jenis kelamin"].isin(f_gender)].copy()
-    dv.insert(0,"No", range(1,len(dv)+1))
-    dv["Timestamp"] = dv["Timestamp"].apply(lambda x: x.strftime("%d %b %Y  %H:%M"))
-    st.dataframe(
-        dv[["No","Timestamp","Status Anda saat ini","Usia","Jenis kelamin"]].reset_index(drop=True),
-        use_container_width=True, hide_index=True,
-        column_config={
-            "No": st.column_config.NumberColumn("No", width=60),
-            "Timestamp": st.column_config.TextColumn("Waktu Respons", width=180),
-            "Status Anda saat ini": st.column_config.TextColumn("Status"),
-            "Usia": st.column_config.TextColumn("Usia"),
-            "Jenis kelamin": st.column_config.TextColumn("Jenis Kelamin"),
-        }
-    )
-    st.markdown(f"<div style='font-size:.78rem;color:#5c5880;margin-top:.5rem'>Menampilkan {len(dv)} dari {T} responden</div>", unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    with c1:
+        f_status = st.multiselect("Filter Status", all_status, default=all_status)
+    with c2:
+        f_gender = st.multiselect("Filter Jenis Kelamin", all_gender, default=all_gender)
+
+    # Pastikan filter tidak kosong (jika dikosongkan, tampilkan semua)
+    if not f_status:
+        f_status = all_status
+    if not f_gender:
+        f_gender = all_gender
+
+    dv = df[
+        df["Status Anda saat ini"].isin(f_status) &
+        df["Jenis kelamin"].isin(f_gender)
+    ].copy().reset_index(drop=True)
+
+    # Badge warna per status
+    status_badge = {
+        "Mahasiswa": ("#7c3aed", "rgba(124,58,237,.2)"),
+        "Pekerja":   ("#10b981", "rgba(16,185,129,.2)"),
+        "Keduanya":  ("#f59e0b", "rgba(245,158,11,.2)"),
+    }
+    gender_badge = {
+        "Laki-laki":  ("#38bdf8", "rgba(56,189,248,.15)"),
+        "Perempuan":  ("#f43f5e", "rgba(244,63,94,.15)"),
+    }
+
+    def badge(text, color, bg):
+        return f'<span style="background:{bg};color:{color};padding:.2rem .65rem;border-radius:999px;font-size:.75rem;font-weight:600">{text}</span>'
+
+    # Build HTML table rows
+    rows_html = ""
+    for i, row in dv.iterrows():
+        ts = row["Timestamp"].strftime("%d %b %Y  %H:%M") if hasattr(row["Timestamp"], "strftime") else str(row["Timestamp"])
+        s  = str(row["Status Anda saat ini"])
+        g  = str(row["Jenis kelamin"])
+        u  = str(row["Usia"])
+        sc, sb = status_badge.get(s, ("#8b87a8","rgba(139,135,168,.15)"))
+        gc, gb = gender_badge.get(g, ("#8b87a8","rgba(139,135,168,.15)"))
+        rows_html += f"""
+        <tr style='border-bottom:1px solid rgba(255,255,255,.05)'>
+          <td style='padding:.65rem 1rem;color:#5c5880;font-size:.82rem'>{i+1}</td>
+          <td style='padding:.65rem 1rem;color:#8b87a8;font-size:.82rem'>{ts}</td>
+          <td style='padding:.65rem 1rem'>{badge(s,sc,sb)}</td>
+          <td style='padding:.65rem 1rem;color:#c4c0e0;font-size:.83rem'>{u}</td>
+          <td style='padding:.65rem 1rem'>{badge(g,gc,gb)}</td>
+        </tr>"""
+
+    st.markdown(f"""
+    <div style='background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);
+                border-radius:16px;overflow:hidden;margin-top:.5rem'>
+      <table style='width:100%;border-collapse:collapse'>
+        <thead>
+          <tr style='background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.08)'>
+            <th style='padding:.75rem 1rem;text-align:left;font-size:.72rem;color:#5c5880;
+                       text-transform:uppercase;letter-spacing:.08em;font-weight:600;width:50px'>No</th>
+            <th style='padding:.75rem 1rem;text-align:left;font-size:.72rem;color:#5c5880;
+                       text-transform:uppercase;letter-spacing:.08em;font-weight:600'>Waktu Respons</th>
+            <th style='padding:.75rem 1rem;text-align:left;font-size:.72rem;color:#5c5880;
+                       text-transform:uppercase;letter-spacing:.08em;font-weight:600'>Status</th>
+            <th style='padding:.75rem 1rem;text-align:left;font-size:.72rem;color:#5c5880;
+                       text-transform:uppercase;letter-spacing:.08em;font-weight:600'>Usia</th>
+            <th style='padding:.75rem 1rem;text-align:left;font-size:.72rem;color:#5c5880;
+                       text-transform:uppercase;letter-spacing:.08em;font-weight:600'>Jenis Kelamin</th>
+          </tr>
+        </thead>
+        <tbody>{rows_html}</tbody>
+      </table>
+    </div>
+    <div style='font-size:.78rem;color:#5c5880;margin-top:.75rem'>
+      Menampilkan <span style='color:#c4b5fd;font-weight:600'>{len(dv)}</span> dari {T} responden
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════════════════════
