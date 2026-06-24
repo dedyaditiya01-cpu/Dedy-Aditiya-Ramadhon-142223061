@@ -30,24 +30,70 @@ footer { visibility: hidden !important; }
 div[class*="appview"] > section > div[class*="block"] > div:first-child { padding-top: 0 !important; }
 .st-emotion-cache-uf99v8, .st-emotion-cache-18ni7ap { display: none !important; }
 
-/* ── Sidebar ── */
+/* ── Sidebar background ── */
 [data-testid="stSidebar"] {
     background: #0e0c24 !important;
-    border-right: 1px solid rgba(255,255,255,0.06) !important;
-    min-width: 240px !important;
+    border-right: 1px solid rgba(255,255,255,0.08) !important;
 }
 
-/* ── Sembunyikan tombol collapse sidebar sepenuhnya ── */
-[data-testid="collapsedControl"]          { display: none !important; }
-[data-testid="stSidebarCollapseButton"]   { display: none !important; }
-button[kind="header"]                     { display: none !important; }
-[data-testid="stSidebar"] button[title="Close sidebar"] { display: none !important; }
-/* Pastikan sidebar selalu tampil */
-[data-testid="stSidebar"][aria-expanded="false"] {
+/* ══ Tombol TUTUP ‹ (saat sidebar terbuka) ══
+   Streamlit render ini sebagai button di dalam sidebar header */
+[data-testid="stSidebarCollapseButton"] button {
+    background: #7c3aed !important;
+    color: #fff !important;
+    border: 2px solid #a78bfa !important;
+    border-radius: 8px !important;
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    box-shadow: 0 2px 12px rgba(124,58,237,0.6) !important;
+    transition: all .2s !important;
+}
+[data-testid="stSidebarCollapseButton"] button:hover {
+    background: #6d28d9 !important;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.85) !important;
+    transform: scale(1.08) !important;
+}
+[data-testid="stSidebarCollapseButton"] button svg,
+[data-testid="stSidebarCollapseButton"] button svg path {
+    fill: #fff !important;
+    stroke: #fff !important;
+}
+
+/* ══ Tombol BUKA › (saat sidebar tertutup) ══
+   Streamlit render ini sebagai collapsedControl di luar sidebar */
+[data-testid="collapsedControl"] {
+    position: fixed !important;
+    left: 0 !important;
+    top: 50vh !important;
+    transform: translateY(-50%) !important;
+    background: linear-gradient(180deg, #7c3aed, #4f46e5) !important;
+    color: #fff !important;
+    border: 2px solid #a78bfa !important;
+    border-left: none !important;
+    border-radius: 0 12px 12px 0 !important;
+    width: 36px !important;
+    height: 64px !important;
     display: flex !important;
-    visibility: visible !important;
-    width: 240px !important;
-    transform: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 4px 0 24px rgba(124,58,237,0.65) !important;
+    cursor: pointer !important;
+    z-index: 999999 !important;
+    transition: all .2s !important;
+}
+[data-testid="collapsedControl"]:hover {
+    width: 42px !important;
+    background: linear-gradient(180deg, #6d28d9, #4338ca) !important;
+    box-shadow: 6px 0 32px rgba(124,58,237,0.9) !important;
+}
+[data-testid="collapsedControl"] svg,
+[data-testid="collapsedControl"] svg path {
+    fill: #fff !important;
+    stroke: #fff !important;
+    color: #fff !important;
+    width: 20px !important;
+    height: 20px !important;
 }
 
 [data-testid="metric-container"] {
@@ -196,183 +242,69 @@ div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div:nth-child(
 
 page = st.session_state.page
 
-# ── Floating Navigation Menu (selalu tampil, navigasi langsung) ──────────────
-_pages_float = [
-    ("🏠", "Beranda",    "Beranda"),
-    ("📊", "Grafik",     "Data"),
-    ("👥", "Responden",  "Responden"),
-    ("✅", "Kesimpulan", "Kesimpulan"),
-    ("ℹ️",  "Tentang",   "Tentang"),
-]
-
-# Build menu items HTML
-_float_items_html = ""
-for icon, label, key in _pages_float:
-    is_active = (st.session_state.page == key)
-    active_style = "background:rgba(124,58,237,0.85) !important;color:#fff !important;border-color:#7c3aed !important;" if is_active else ""
-    _float_items_html += f"""
-    <div class="fnav-item {'fnav-active' if is_active else ''}" data-key="{key}">
-      <span style='font-size:1rem'>{icon}</span>
-      <span>{label}</span>
-    </div>"""
-
-# Inject hidden Streamlit buttons for each page (for JS to click)
+# ── Inject CSS ke parent window untuk styling collapsedControl ───────────────
 st.markdown("""
-<style>
-#_floatNavBtns { position:fixed; left:-9999px; top:-9999px; opacity:0; pointer-events:none; z-index:-1; }
-</style>
-<div id="_floatNavBtns"></div>
-""", unsafe_allow_html=True)
-
-# Floating menu HTML + CSS
-st.markdown(f"""
-<style>
-#floatNav {{
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    font-family: 'Inter', sans-serif;
-}}
-#floatMenu {{
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    background: rgba(10,9,24,0.98);
-    border: 1px solid rgba(124,58,237,.4);
-    border-radius: 16px;
-    padding: 10px 10px 8px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(124,58,237,.15);
-    min-width: 190px;
-    backdrop-filter: blur(20px);
-}}
-#floatMenu.open {{ display: flex; }}
-.fnav-label {{
-    font-size: .62rem;
-    color: #4a4870;
-    text-align: center;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    padding: 2px 0 6px;
-    border-bottom: 1px solid rgba(255,255,255,.06);
-    margin-bottom: 4px;
-}}
-.fnav-item {{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 14px;
-    border-radius: 10px;
-    font-size: .84rem;
-    color: #8b87a8;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all .15s;
-    font-weight: 500;
-}}
-.fnav-item:hover {{
-    background: rgba(124,58,237,.2);
-    color: #e0ddf5;
-    border-color: rgba(124,58,237,.3);
-}}
-.fnav-active {{
-    background: rgba(124,58,237,.85) !important;
-    color: #fff !important;
-    border-color: #7c3aed !important;
-    font-weight: 600 !important;
-}}
-#floatToggle {{
-    width: 52px;
-    height: 52px;
-    background: linear-gradient(135deg, #7c3aed, #4f46e5);
-    border: none;
-    border-radius: 50%;
-    color: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-    box-shadow: 0 4px 24px rgba(124,58,237,0.65);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all .2s;
-    outline: none;
-}}
-#floatToggle:hover {{
-    transform: scale(1.1);
-    box-shadow: 0 6px 32px rgba(124,58,237,0.85);
-}}
-</style>
-
-<div id="floatNav">
-  <div id="floatMenu">
-    <div class="fnav-label">Navigasi</div>
-    {_float_items_html}
-  </div>
-  <button id="floatToggle" title="Menu Navigasi">☰</button>
-</div>
-
 <script>
-(function() {{
-  var toggle = document.getElementById('floatToggle');
-  var menu   = document.getElementById('floatMenu');
-
-  toggle.addEventListener('click', function(e) {{
-    e.stopPropagation();
-    menu.classList.toggle('open');
-    toggle.innerHTML = menu.classList.contains('open') ? '✕' : '☰';
-  }});
-
-  document.addEventListener('click', function(e) {{
-    if (!document.getElementById('floatNav').contains(e.target)) {{
-      menu.classList.remove('open');
-      toggle.innerHTML = '☰';
-    }}
-  }});
-
-  // Navigasi: klik item → klik tombol tersembunyi di sidebar Streamlit
-  document.querySelectorAll('.fnav-item').forEach(function(item) {{
-    item.addEventListener('click', function() {{
-      var key = this.getAttribute('data-key');
-      // Cari semua button di dalam stSidebar dan klik yang sesuai
-      var keyMap = {{
-        'Beranda':    '🏠 Beranda',
-        'Data':       '📊 Data & Grafik',
-        'Responden':  '👥 Responden',
-        'Kesimpulan': '✅ Kesimpulan',
-        'Tentang':    'ℹ️ Tentang'
-      }};
-      var target = keyMap[key] || key;
-      
-      // Cari di seluruh dokumen termasuk iframe parent
-      function findAndClick(doc) {{
-        var btns = doc.querySelectorAll('[data-testid="stSidebar"] button');
-        for (var i=0; i<btns.length; i++) {{
-          if (btns[i].innerText.trim().includes(target.slice(3).trim()) ||
-              btns[i].innerText.trim() === target) {{
-            btns[i].click();
-            return true;
-          }}
-        }}
-        return false;
-      }}
-      
-      // Coba di current window dulu
-      if (!findAndClick(document)) {{
-        // Coba di parent (Streamlit iframe)
-        try {{ findAndClick(window.parent.document); }} catch(e) {{}}
-      }}
-      
-      menu.classList.remove('open');
-      toggle.innerHTML = '☰';
-    }});
-  }});
-}})();
+(function injectParentCSS() {
+  var css = `
+    [data-testid="collapsedControl"] {
+      position: fixed !important;
+      left: 0 !important;
+      top: 50vh !important;
+      transform: translateY(-50%) !important;
+      background: linear-gradient(180deg, #7c3aed, #4f46e5) !important;
+      border: 2px solid #a78bfa !important;
+      border-left: none !important;
+      border-radius: 0 12px 12px 0 !important;
+      width: 36px !important;
+      height: 64px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 4px 0 24px rgba(124,58,237,0.65) !important;
+      cursor: pointer !important;
+      z-index: 999999 !important;
+      transition: all .2s !important;
+    }
+    [data-testid="collapsedControl"]:hover {
+      width: 44px !important;
+      box-shadow: 6px 0 32px rgba(124,58,237,0.9) !important;
+    }
+    [data-testid="collapsedControl"] svg,
+    [data-testid="collapsedControl"] svg * {
+      fill: white !important;
+      stroke: white !important;
+      color: white !important;
+    }
+  `;
+  function inject(doc) {
+    try {
+      var el = doc.getElementById('_stCollapseStyle');
+      if (!el) {
+        el = doc.createElement('style');
+        el.id = '_stCollapseStyle';
+        doc.head.appendChild(el);
+      }
+      el.textContent = css;
+    } catch(e) {}
+  }
+  // Inject ke current window
+  inject(document);
+  // Inject ke parent (Streamlit shell)
+  try { inject(window.parent.document); } catch(e) {}
+  // Retry setelah render
+  setTimeout(function() {
+    inject(document);
+    try { inject(window.parent.document); } catch(e) {}
+  }, 800);
+  setTimeout(function() {
+    inject(document);
+    try { inject(window.parent.document); } catch(e) {}
+  }, 2000);
+})();
 </script>
 """, unsafe_allow_html=True)
+
 
 
 # ════════════════════════════════════════════════════════════════════════════
