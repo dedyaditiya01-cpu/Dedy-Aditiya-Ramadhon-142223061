@@ -228,6 +228,116 @@ div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div:nth-child(
 
 page = st.session_state.page
 
+# ── Floating Navigation Menu ─────────────────────────────────────────────────
+_pages_float = {
+    "Beranda":    ("🏠", "Beranda"),
+    "Data":       ("📊", "Grafik"),
+    "Responden":  ("👥", "Responden"),
+    "Kesimpulan": ("✅", "Kesimpulan"),
+    "Tentang":    ("ℹ️", "Tentang"),
+}
+_cur = page
+
+# Render floating menu HTML — selalu tampil
+_float_items = ""
+for key, (icon, label) in _pages_float.items():
+    active_style = "background:rgba(124,58,237,0.9);color:#fff;border-color:rgba(124,58,237,1);" if key == _cur else ""
+    _float_items += f"""
+    <button onclick="window._nav('{key}')" style="
+        display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;
+        background:rgba(14,12,36,0.95);color:#9b98b0;border:1px solid rgba(255,255,255,.1);
+        border-radius:10px;font-size:.82rem;font-family:Inter,sans-serif;font-weight:500;
+        cursor:pointer;transition:all .15s;text-align:left;{active_style}">
+      <span style='font-size:1rem'>{icon}</span> {label}
+    </button>"""
+
+st.markdown(f"""
+<style>
+#floatNav {{ 
+    position:fixed; bottom:24px; right:24px; z-index:9999;
+    display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+}}
+#floatMenu {{
+    display:none; flex-direction:column; gap:4px;
+    background:rgba(14,12,36,0.97);
+    border:1px solid rgba(124,58,237,.35);
+    border-radius:14px; padding:10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,.2);
+    min-width:180px;
+    backdrop-filter:blur(12px);
+}}
+#floatMenu.open {{ display:flex; }}
+#floatToggle {{
+    width:52px; height:52px;
+    background: linear-gradient(135deg,#7c3aed,#4f46e5);
+    border:none; border-radius:50%;
+    color:#fff; font-size:1.4rem;
+    cursor:pointer;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.6);
+    display:flex; align-items:center; justify-content:center;
+    transition:all .2s;
+}}
+#floatToggle:hover {{ transform:scale(1.08); box-shadow:0 6px 28px rgba(124,58,237,0.8); }}
+#floatMenu button:hover {{
+    background:rgba(124,58,237,0.3) !important;
+    color:#e0ddf5 !important;
+    border-color:rgba(124,58,237,.4) !important;
+}}
+#floatLabel {{
+    font-size:.65rem; color:#6c6890; text-align:center;
+    font-family:Inter,sans-serif; letter-spacing:.06em; text-transform:uppercase;
+    padding:4px 0 2px;
+}}
+</style>
+
+<div id="floatNav">
+  <div id="floatMenu">
+    <div id="floatLabel">Navigasi</div>
+    {_float_items}
+  </div>
+  <button id="floatToggle" onclick="toggleMenu()" title="Menu Navigasi">☰</button>
+</div>
+
+<script>
+function toggleMenu() {{
+  var m = document.getElementById('floatMenu');
+  var t = document.getElementById('floatToggle');
+  m.classList.toggle('open');
+  t.innerHTML = m.classList.contains('open') ? '✕' : '☰';
+}}
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {{
+  var nav = document.getElementById('floatNav');
+  if (nav && !nav.contains(e.target)) {{
+    var m = document.getElementById('floatMenu');
+    var t = document.getElementById('floatToggle');
+    if (m) {{ m.classList.remove('open'); t.innerHTML = '☰'; }}
+  }}
+}});
+// Navigation via Streamlit query params trick
+window._nav = function(page) {{
+  // Set in sessionStorage and trigger rerun via URL hash
+  sessionStorage.setItem('_navTarget', page);
+  window.location.hash = 'nav_' + page + '_' + Date.now();
+}};
+// Check on load if there's a pending nav
+(function() {{
+  var target = sessionStorage.getItem('_navTarget');
+  if (target) {{
+    sessionStorage.removeItem('_navTarget');
+    // Find and click the matching Streamlit button in sidebar
+    setTimeout(function() {{
+      var btns = window.parent.document.querySelectorAll('[data-testid="stSidebar"] button');
+      var labels = {{ 'Beranda':'Beranda','Data':'Data & Grafik','Responden':'Responden','Kesimpulan':'Kesimpulan','Tentang':'Tentang' }};
+      btns.forEach(function(btn) {{
+        if (btn.innerText.includes(labels[target] || target)) btn.click();
+      }});
+    }}, 300);
+  }}
+}})();
+</script>
+""", unsafe_allow_html=True)
+
 # ════════════════════════════════════════════════════════════════════════════
 # BERANDA
 # ════════════════════════════════════════════════════════════════════════════
