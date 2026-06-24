@@ -30,70 +30,22 @@ footer { visibility: hidden !important; }
 div[class*="appview"] > section > div[class*="block"] > div:first-child { padding-top: 0 !important; }
 .st-emotion-cache-uf99v8, .st-emotion-cache-18ni7ap { display: none !important; }
 
-/* ── Sidebar background ── */
+/* ── Sidebar — dikunci selalu terbuka ── */
 [data-testid="stSidebar"] {
     background: #0e0c24 !important;
     border-right: 1px solid rgba(255,255,255,0.08) !important;
+    min-width: 244px !important;
 }
-
-/* ══ Tombol TUTUP ‹ (saat sidebar terbuka) ══
-   Streamlit render ini sebagai button di dalam sidebar header */
-[data-testid="stSidebarCollapseButton"] button {
-    background: #7c3aed !important;
-    color: #fff !important;
-    border: 2px solid #a78bfa !important;
-    border-radius: 8px !important;
-    width: 34px !important;
-    height: 34px !important;
-    padding: 0 !important;
-    box-shadow: 0 2px 12px rgba(124,58,237,0.6) !important;
-    transition: all .2s !important;
-}
-[data-testid="stSidebarCollapseButton"] button:hover {
-    background: #6d28d9 !important;
-    box-shadow: 0 4px 20px rgba(124,58,237,0.85) !important;
-    transform: scale(1.08) !important;
-}
-[data-testid="stSidebarCollapseButton"] button svg,
-[data-testid="stSidebarCollapseButton"] button svg path {
-    fill: #fff !important;
-    stroke: #fff !important;
-}
-
-/* ══ Tombol BUKA › (saat sidebar tertutup) ══
-   Streamlit render ini sebagai collapsedControl di luar sidebar */
-[data-testid="collapsedControl"] {
-    position: fixed !important;
-    left: 0 !important;
-    top: 50vh !important;
-    transform: translateY(-50%) !important;
-    background: linear-gradient(180deg, #7c3aed, #4f46e5) !important;
-    color: #fff !important;
-    border: 2px solid #a78bfa !important;
-    border-left: none !important;
-    border-radius: 0 12px 12px 0 !important;
-    width: 36px !important;
-    height: 64px !important;
+[data-testid="collapsedControl"]        { display: none !important; visibility: hidden !important; }
+[data-testid="stSidebarCollapseButton"] { display: none !important; visibility: hidden !important; }
+button[kind="header"]                   { display: none !important; visibility: hidden !important; }
+[data-testid="stSidebar"][aria-expanded="false"] {
+    transform: none !important;
     display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: 4px 0 24px rgba(124,58,237,0.65) !important;
-    cursor: pointer !important;
-    z-index: 999999 !important;
-    transition: all .2s !important;
-}
-[data-testid="collapsedControl"]:hover {
-    width: 42px !important;
-    background: linear-gradient(180deg, #6d28d9, #4338ca) !important;
-    box-shadow: 6px 0 32px rgba(124,58,237,0.9) !important;
-}
-[data-testid="collapsedControl"] svg,
-[data-testid="collapsedControl"] svg path {
-    fill: #fff !important;
-    stroke: #fff !important;
-    color: #fff !important;
-    width: 20px !important;
-    height: 20px !important;
+    visibility: visible !important;
+    width: 244px !important;
+    min-width: 244px !important;
+    left: 0 !important;
 }
 
 [data-testid="metric-container"] {
@@ -242,68 +194,7 @@ div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div:nth-child(
 
 page = st.session_state.page
 
-# ── Inject CSS ke parent window untuk styling collapsedControl ───────────────
-st.markdown("""
-<script>
-(function injectParentCSS() {
-  var css = `
-    [data-testid="collapsedControl"] {
-      position: fixed !important;
-      left: 0 !important;
-      top: 50vh !important;
-      transform: translateY(-50%) !important;
-      background: linear-gradient(180deg, #7c3aed, #4f46e5) !important;
-      border: 2px solid #a78bfa !important;
-      border-left: none !important;
-      border-radius: 0 12px 12px 0 !important;
-      width: 36px !important;
-      height: 64px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      box-shadow: 4px 0 24px rgba(124,58,237,0.65) !important;
-      cursor: pointer !important;
-      z-index: 999999 !important;
-      transition: all .2s !important;
-    }
-    [data-testid="collapsedControl"]:hover {
-      width: 44px !important;
-      box-shadow: 6px 0 32px rgba(124,58,237,0.9) !important;
-    }
-    [data-testid="collapsedControl"] svg,
-    [data-testid="collapsedControl"] svg * {
-      fill: white !important;
-      stroke: white !important;
-      color: white !important;
-    }
-  `;
-  function inject(doc) {
-    try {
-      var el = doc.getElementById('_stCollapseStyle');
-      if (!el) {
-        el = doc.createElement('style');
-        el.id = '_stCollapseStyle';
-        doc.head.appendChild(el);
-      }
-      el.textContent = css;
-    } catch(e) {}
-  }
-  // Inject ke current window
-  inject(document);
-  // Inject ke parent (Streamlit shell)
-  try { inject(window.parent.document); } catch(e) {}
-  // Retry setelah render
-  setTimeout(function() {
-    inject(document);
-    try { inject(window.parent.document); } catch(e) {}
-  }, 800);
-  setTimeout(function() {
-    inject(document);
-    try { inject(window.parent.document); } catch(e) {}
-  }, 2000);
-})();
-</script>
-""", unsafe_allow_html=True)
+
 
 
 
