@@ -17,10 +17,38 @@ html, body, [class*="css"], .stApp { font-family: 'Inter', sans-serif !important
 .stApp { background: #08071a !important; }
 .block-container { padding: 2rem 2.5rem !important; max-width: 1280px; }
 
+/* ── Hide white header bar completely ── */
+header[data-testid="stHeader"] { display: none !important; }
+[data-testid="stHeader"] { display: none !important; }
+[data-testid="stDecoration"] { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+.stAppHeader { display: none !important; }
+#MainMenu { visibility: hidden !important; }
+footer { visibility: hidden !important; }
+.stDeployButton { display: none !important; }
+/* Extra coverage for newer Streamlit versions */
+div[class*="appview"] > section > div[class*="block"] > div:first-child { padding-top: 0 !important; }
+.st-emotion-cache-uf99v8, .st-emotion-cache-18ni7ap { display: none !important; }
+
+/* ── Sidebar ── */
 [data-testid="stSidebar"] {
     background: #0e0c24 !important;
     border-right: 1px solid rgba(255,255,255,0.06) !important;
 }
+
+/* ── Sidebar collapse arrow — buat putih & terlihat ── */
+[data-testid="collapsedControl"] {
+    color: rgba(255,255,255,0.6) !important;
+    background: rgba(255,255,255,0.05) !important;
+    border-radius: 8px !important;
+}
+[data-testid="collapsedControl"]:hover {
+    color: #fff !important;
+    background: rgba(255,255,255,0.12) !important;
+}
+[data-testid="collapsedControl"] svg { fill: rgba(255,255,255,0.8) !important; stroke: rgba(255,255,255,0.8) !important; }
+button[kind="header"] { color: rgba(255,255,255,0.6) !important; }
+button[kind="header"] svg { fill: rgba(255,255,255,0.6) !important; }
 
 [data-testid="metric-container"] {
     background: rgba(255,255,255,0.03) !important;
@@ -42,7 +70,12 @@ html, body, [class*="css"], .stApp { font-family: 'Inter', sans-serif !important
 
 hr { border-color: rgba(255,255,255,0.07) !important; margin: 2rem 0 !important; }
 
-#MainMenu, footer { visibility: hidden !important; }
+#MainMenu, footer, header { visibility: hidden !important; }
+.stDeployButton { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+[data-testid="stHeader"] { display: none !important; background: transparent !important; }
+[data-testid="stDecoration"] { display: none !important; }
+.stAppHeader { display: none !important; }
 .stDeployButton { display: none !important; }
 
 /* Tombol nav custom */
@@ -110,10 +143,9 @@ with st.sidebar:
     }
 
     for label, key in PAGES.items():
-        active = "active" if st.session_state.page == key else ""
         if st.button(label, key=f"btn_{key}",
                      use_container_width=True,
-                     type="secondary" if not active else "primary"):
+                     type="secondary"):
             st.session_state.page = key
             st.rerun()
 
@@ -129,31 +161,35 @@ with st.sidebar:
       Metode: Survei Online<br>Periode: April 2026<br>Pertanyaan: 8 item
     </div>""", unsafe_allow_html=True)
 
-# ── CSS aktif pada tombol yang dipilih ───────────────────────────────────────
+# ── CSS tombol sidebar ───────────────────────────────────────────────────────
+_page_idx = {"Beranda":1,"Data":2,"Responden":3,"Kesimpulan":4,"Tentang":5}
+_active_n = _page_idx.get(st.session_state.page, 1)
 st.markdown(f"""
 <style>
-div[data-testid="stSidebar"] button[kind="primary"] {{
-    background: rgba(124,58,237,.15) !important;
-    color: #c4b5fd !important;
-    border: 1px solid rgba(124,58,237,.3) !important;
-}}
-div[data-testid="stSidebar"] button[kind="secondary"] {{
+div[data-testid="stSidebar"] button {{
     background: transparent !important;
     color: #7c79a0 !important;
     border: 1px solid transparent !important;
-}}
-div[data-testid="stSidebar"] button {{
     border-radius: 10px !important;
     font-size: .875rem !important;
     text-align: left !important;
     justify-content: flex-start !important;
-    padding: 8px 14px !important;
-    margin-bottom: 2px !important;
+    padding: 9px 14px !important;
+    margin-bottom: 3px !important;
     font-weight: 500 !important;
+    transition: all .15s !important;
+    box-shadow: none !important;
 }}
 div[data-testid="stSidebar"] button:hover {{
     background: rgba(255,255,255,.06) !important;
     color: #e0ddf5 !important;
+    border-color: rgba(255,255,255,.08) !important;
+}}
+div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div:nth-child({_active_n}) button {{
+    background: rgba(124,58,237,.18) !important;
+    color: #c4b5fd !important;
+    border: 1px solid rgba(124,58,237,.35) !important;
+    font-weight: 600 !important;
 }}
 </style>
 """, unsafe_allow_html=True)
