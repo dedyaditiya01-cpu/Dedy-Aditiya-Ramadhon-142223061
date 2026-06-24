@@ -34,53 +34,21 @@ div[class*="appview"] > section > div[class*="block"] > div:first-child { paddin
 [data-testid="stSidebar"] {
     background: #0e0c24 !important;
     border-right: 1px solid rgba(255,255,255,0.06) !important;
+    min-width: 240px !important;
 }
 
-/* ── Tombol expand/collapse sidebar ── */
-/* Tombol ">" saat sidebar tertutup */
-[data-testid="collapsedControl"] {
-    color: #fff !important;
-    background: #7c3aed !important;
-    border-radius: 0 10px 10px 0 !important;
-    width: 28px !important;
-    height: 56px !important;
+/* ── Sembunyikan tombol collapse sidebar sepenuhnya ── */
+[data-testid="collapsedControl"]          { display: none !important; }
+[data-testid="stSidebarCollapseButton"]   { display: none !important; }
+button[kind="header"]                     { display: none !important; }
+[data-testid="stSidebar"] button[title="Close sidebar"] { display: none !important; }
+/* Pastikan sidebar selalu tampil */
+[data-testid="stSidebar"][aria-expanded="false"] {
     display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: 2px 0 12px rgba(124,58,237,0.5) !important;
-    transition: all .2s !important;
+    visibility: visible !important;
+    width: 240px !important;
+    transform: none !important;
 }
-[data-testid="collapsedControl"]:hover {
-    background: #6d28d9 !important;
-    box-shadow: 2px 0 20px rgba(124,58,237,0.7) !important;
-}
-[data-testid="collapsedControl"] svg {
-    fill: #fff !important;
-    stroke: #fff !important;
-    width: 16px !important;
-    height: 16px !important;
-}
-/* Tombol "<" saat sidebar terbuka — di dalam sidebar */
-[data-testid="stSidebarCollapseButton"] button {
-    color: rgba(255,255,255,0.7) !important;
-    background: rgba(124,58,237,0.2) !important;
-    border: 1px solid rgba(124,58,237,0.3) !important;
-    border-radius: 8px !important;
-}
-[data-testid="stSidebarCollapseButton"] button:hover {
-    background: rgba(124,58,237,0.35) !important;
-    color: #fff !important;
-}
-[data-testid="stSidebarCollapseButton"] svg {
-    fill: rgba(255,255,255,0.8) !important;
-    stroke: rgba(255,255,255,0.8) !important;
-}
-button[kind="header"] {
-    color: rgba(255,255,255,0.7) !important;
-    background: rgba(124,58,237,0.15) !important;
-    border-radius: 8px !important;
-}
-button[kind="header"] svg { fill: rgba(255,255,255,0.8) !important; }
 
 [data-testid="metric-container"] {
     background: rgba(255,255,255,0.03) !important;
@@ -228,115 +196,184 @@ div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div:nth-child(
 
 page = st.session_state.page
 
-# ── Floating Navigation Menu ─────────────────────────────────────────────────
-_pages_float = {
-    "Beranda":    ("🏠", "Beranda"),
-    "Data":       ("📊", "Grafik"),
-    "Responden":  ("👥", "Responden"),
-    "Kesimpulan": ("✅", "Kesimpulan"),
-    "Tentang":    ("ℹ️", "Tentang"),
-}
-_cur = page
+# ── Floating Navigation Menu (selalu tampil, navigasi langsung) ──────────────
+_pages_float = [
+    ("🏠", "Beranda",    "Beranda"),
+    ("📊", "Grafik",     "Data"),
+    ("👥", "Responden",  "Responden"),
+    ("✅", "Kesimpulan", "Kesimpulan"),
+    ("ℹ️",  "Tentang",   "Tentang"),
+]
 
-# Render floating menu HTML — selalu tampil
-_float_items = ""
-for key, (icon, label) in _pages_float.items():
-    active_style = "background:rgba(124,58,237,0.9);color:#fff;border-color:rgba(124,58,237,1);" if key == _cur else ""
-    _float_items += f"""
-    <button onclick="window._nav('{key}')" style="
-        display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;
-        background:rgba(14,12,36,0.95);color:#9b98b0;border:1px solid rgba(255,255,255,.1);
-        border-radius:10px;font-size:.82rem;font-family:Inter,sans-serif;font-weight:500;
-        cursor:pointer;transition:all .15s;text-align:left;{active_style}">
-      <span style='font-size:1rem'>{icon}</span> {label}
-    </button>"""
+# Build menu items HTML
+_float_items_html = ""
+for icon, label, key in _pages_float:
+    is_active = (st.session_state.page == key)
+    active_style = "background:rgba(124,58,237,0.85) !important;color:#fff !important;border-color:#7c3aed !important;" if is_active else ""
+    _float_items_html += f"""
+    <div class="fnav-item {'fnav-active' if is_active else ''}" data-key="{key}">
+      <span style='font-size:1rem'>{icon}</span>
+      <span>{label}</span>
+    </div>"""
 
+# Inject hidden Streamlit buttons for each page (for JS to click)
+st.markdown("""
+<style>
+#_floatNavBtns { position:fixed; left:-9999px; top:-9999px; opacity:0; pointer-events:none; z-index:-1; }
+</style>
+<div id="_floatNavBtns"></div>
+""", unsafe_allow_html=True)
+
+# Floating menu HTML + CSS
 st.markdown(f"""
 <style>
-#floatNav {{ 
-    position:fixed; bottom:24px; right:24px; z-index:9999;
-    display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+#floatNav {{
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
 }}
 #floatMenu {{
-    display:none; flex-direction:column; gap:4px;
-    background:rgba(14,12,36,0.97);
-    border:1px solid rgba(124,58,237,.35);
-    border-radius:14px; padding:10px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,.2);
-    min-width:180px;
-    backdrop-filter:blur(12px);
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(10,9,24,0.98);
+    border: 1px solid rgba(124,58,237,.4);
+    border-radius: 16px;
+    padding: 10px 10px 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(124,58,237,.15);
+    min-width: 190px;
+    backdrop-filter: blur(20px);
 }}
-#floatMenu.open {{ display:flex; }}
+#floatMenu.open {{ display: flex; }}
+.fnav-label {{
+    font-size: .62rem;
+    color: #4a4870;
+    text-align: center;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 2px 0 6px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    margin-bottom: 4px;
+}}
+.fnav-item {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: .84rem;
+    color: #8b87a8;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all .15s;
+    font-weight: 500;
+}}
+.fnav-item:hover {{
+    background: rgba(124,58,237,.2);
+    color: #e0ddf5;
+    border-color: rgba(124,58,237,.3);
+}}
+.fnav-active {{
+    background: rgba(124,58,237,.85) !important;
+    color: #fff !important;
+    border-color: #7c3aed !important;
+    font-weight: 600 !important;
+}}
 #floatToggle {{
-    width:52px; height:52px;
-    background: linear-gradient(135deg,#7c3aed,#4f46e5);
-    border:none; border-radius:50%;
-    color:#fff; font-size:1.4rem;
-    cursor:pointer;
-    box-shadow: 0 4px 20px rgba(124,58,237,0.6);
-    display:flex; align-items:center; justify-content:center;
-    transition:all .2s;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 4px 24px rgba(124,58,237,0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+    outline: none;
 }}
-#floatToggle:hover {{ transform:scale(1.08); box-shadow:0 6px 28px rgba(124,58,237,0.8); }}
-#floatMenu button:hover {{
-    background:rgba(124,58,237,0.3) !important;
-    color:#e0ddf5 !important;
-    border-color:rgba(124,58,237,.4) !important;
-}}
-#floatLabel {{
-    font-size:.65rem; color:#6c6890; text-align:center;
-    font-family:Inter,sans-serif; letter-spacing:.06em; text-transform:uppercase;
-    padding:4px 0 2px;
+#floatToggle:hover {{
+    transform: scale(1.1);
+    box-shadow: 0 6px 32px rgba(124,58,237,0.85);
 }}
 </style>
 
 <div id="floatNav">
   <div id="floatMenu">
-    <div id="floatLabel">Navigasi</div>
-    {_float_items}
+    <div class="fnav-label">Navigasi</div>
+    {_float_items_html}
   </div>
-  <button id="floatToggle" onclick="toggleMenu()" title="Menu Navigasi">☰</button>
+  <button id="floatToggle" title="Menu Navigasi">☰</button>
 </div>
 
 <script>
-function toggleMenu() {{
-  var m = document.getElementById('floatMenu');
-  var t = document.getElementById('floatToggle');
-  m.classList.toggle('open');
-  t.innerHTML = m.classList.contains('open') ? '✕' : '☰';
-}}
-// Close menu when clicking outside
-document.addEventListener('click', function(e) {{
-  var nav = document.getElementById('floatNav');
-  if (nav && !nav.contains(e.target)) {{
-    var m = document.getElementById('floatMenu');
-    var t = document.getElementById('floatToggle');
-    if (m) {{ m.classList.remove('open'); t.innerHTML = '☰'; }}
-  }}
-}});
-// Navigation via Streamlit query params trick
-window._nav = function(page) {{
-  // Set in sessionStorage and trigger rerun via URL hash
-  sessionStorage.setItem('_navTarget', page);
-  window.location.hash = 'nav_' + page + '_' + Date.now();
-}};
-// Check on load if there's a pending nav
 (function() {{
-  var target = sessionStorage.getItem('_navTarget');
-  if (target) {{
-    sessionStorage.removeItem('_navTarget');
-    // Find and click the matching Streamlit button in sidebar
-    setTimeout(function() {{
-      var btns = window.parent.document.querySelectorAll('[data-testid="stSidebar"] button');
-      var labels = {{ 'Beranda':'Beranda','Data':'Data & Grafik','Responden':'Responden','Kesimpulan':'Kesimpulan','Tentang':'Tentang' }};
-      btns.forEach(function(btn) {{
-        if (btn.innerText.includes(labels[target] || target)) btn.click();
-      }});
-    }}, 300);
-  }}
+  var toggle = document.getElementById('floatToggle');
+  var menu   = document.getElementById('floatMenu');
+
+  toggle.addEventListener('click', function(e) {{
+    e.stopPropagation();
+    menu.classList.toggle('open');
+    toggle.innerHTML = menu.classList.contains('open') ? '✕' : '☰';
+  }});
+
+  document.addEventListener('click', function(e) {{
+    if (!document.getElementById('floatNav').contains(e.target)) {{
+      menu.classList.remove('open');
+      toggle.innerHTML = '☰';
+    }}
+  }});
+
+  // Navigasi: klik item → klik tombol tersembunyi di sidebar Streamlit
+  document.querySelectorAll('.fnav-item').forEach(function(item) {{
+    item.addEventListener('click', function() {{
+      var key = this.getAttribute('data-key');
+      // Cari semua button di dalam stSidebar dan klik yang sesuai
+      var keyMap = {{
+        'Beranda':    '🏠 Beranda',
+        'Data':       '📊 Data & Grafik',
+        'Responden':  '👥 Responden',
+        'Kesimpulan': '✅ Kesimpulan',
+        'Tentang':    'ℹ️ Tentang'
+      }};
+      var target = keyMap[key] || key;
+      
+      // Cari di seluruh dokumen termasuk iframe parent
+      function findAndClick(doc) {{
+        var btns = doc.querySelectorAll('[data-testid="stSidebar"] button');
+        for (var i=0; i<btns.length; i++) {{
+          if (btns[i].innerText.trim().includes(target.slice(3).trim()) ||
+              btns[i].innerText.trim() === target) {{
+            btns[i].click();
+            return true;
+          }}
+        }}
+        return false;
+      }}
+      
+      // Coba di current window dulu
+      if (!findAndClick(document)) {{
+        // Coba di parent (Streamlit iframe)
+        try {{ findAndClick(window.parent.document); }} catch(e) {{}}
+      }}
+      
+      menu.classList.remove('open');
+      toggle.innerHTML = '☰';
+    }});
+  }});
 }})();
 </script>
 """, unsafe_allow_html=True)
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # BERANDA
