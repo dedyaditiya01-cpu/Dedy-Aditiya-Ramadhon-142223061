@@ -36,19 +36,51 @@ div[class*="appview"] > section > div[class*="block"] > div:first-child { paddin
     border-right: 1px solid rgba(255,255,255,0.06) !important;
 }
 
-/* ── Sidebar collapse arrow — buat putih & terlihat ── */
+/* ── Tombol expand/collapse sidebar ── */
+/* Tombol ">" saat sidebar tertutup */
 [data-testid="collapsedControl"] {
-    color: rgba(255,255,255,0.6) !important;
-    background: rgba(255,255,255,0.05) !important;
-    border-radius: 8px !important;
+    color: #fff !important;
+    background: #7c3aed !important;
+    border-radius: 0 10px 10px 0 !important;
+    width: 28px !important;
+    height: 56px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 2px 0 12px rgba(124,58,237,0.5) !important;
+    transition: all .2s !important;
 }
 [data-testid="collapsedControl"]:hover {
-    color: #fff !important;
-    background: rgba(255,255,255,0.12) !important;
+    background: #6d28d9 !important;
+    box-shadow: 2px 0 20px rgba(124,58,237,0.7) !important;
 }
-[data-testid="collapsedControl"] svg { fill: rgba(255,255,255,0.8) !important; stroke: rgba(255,255,255,0.8) !important; }
-button[kind="header"] { color: rgba(255,255,255,0.6) !important; }
-button[kind="header"] svg { fill: rgba(255,255,255,0.6) !important; }
+[data-testid="collapsedControl"] svg {
+    fill: #fff !important;
+    stroke: #fff !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+/* Tombol "<" saat sidebar terbuka — di dalam sidebar */
+[data-testid="stSidebarCollapseButton"] button {
+    color: rgba(255,255,255,0.7) !important;
+    background: rgba(124,58,237,0.2) !important;
+    border: 1px solid rgba(124,58,237,0.3) !important;
+    border-radius: 8px !important;
+}
+[data-testid="stSidebarCollapseButton"] button:hover {
+    background: rgba(124,58,237,0.35) !important;
+    color: #fff !important;
+}
+[data-testid="stSidebarCollapseButton"] svg {
+    fill: rgba(255,255,255,0.8) !important;
+    stroke: rgba(255,255,255,0.8) !important;
+}
+button[kind="header"] {
+    color: rgba(255,255,255,0.7) !important;
+    background: rgba(124,58,237,0.15) !important;
+    border-radius: 8px !important;
+}
+button[kind="header"] svg { fill: rgba(255,255,255,0.8) !important; }
 
 [data-testid="metric-container"] {
     background: rgba(255,255,255,0.03) !important;
